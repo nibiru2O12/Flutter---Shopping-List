@@ -1,15 +1,24 @@
 {
-    "names": [{
-        "name":"Helmet",
-        "price": "255",
-        "category": "HeadWear"
+    "products": [{
+        "name": "helmet 1",
+        "price": 2000.00,
+        "reviews": 104,
+        "ratings": 3,
+        "category": "Headwear",
+        "image_path": "assets/products/helmet.png"
     },{
-        "name":"Jacket",
-        "price": "1255",
-        "category": "BodyWear"
+        "name": "Jacket",
+        "price": 2000.00,
+        "reviews": 104,
+        "ratings": 2,
+        "category": "Bodywear",
+        "image_path": "assets/products/jacket.png"
     },{
-        "name":"Side Mirror",
-        "price": "155",
-        "category": "Accessory"
+        "name": "Side Mirro",
+        "price": 2000.00,
+        "reviews": 104,
+        "ratings": 1,
+        "category": "Accessory",
+        "image_path": "assets/products/sidemirror.png"
     }]
 }

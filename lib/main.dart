@@ -122,70 +122,78 @@ class CartModel extends ChangeNotifier {
 }
 
 void main() {
-  List<Product> products = const [
-    Product(
-        name: "helmet",
-        price: 2000.00,
-        reviews: 104,
-        ratings: 3,
-        category: ProductCategory.HeadWear,
-        imagePath: "assets/products/helmet.png"),
-    Product(
-        name: "jacket",
-        price: 3500.0,
-        reviews: 4,
-        ratings: 2,
-        category: ProductCategory.BodyWear,
-        imagePath: "assets/products/jacket.png"),
-    Product(
-        name: "sidemirror",
-        price: 150.0,
-        reviews: 25,
-        ratings: 4,
-        category: ProductCategory.Accessory,
-        imagePath: "assets/products/sidemirror.png")
-  ];
-
-  runApp(ChangeNotifierProvider(
-    create: (context) => CartModel(),
-    child: MaterialApp(
-      initialRoute: "/",
-      onGenerateRoute: (settings) {
-        final args = settings.arguments as List<Product>;
-        return MaterialPageRoute(
-            builder: (context) => Checkout(
-                  cart: args,
-                ));
-      },
-      routes: {
-        "/": (context) => ShoppingList(products: products),
-      },
-    ),
-  ));
-
-  // runApp(ChangeNotifierProvider(
-  //   create: (context) => CartModel(),
-  //   child: MaterialApp(
-  //     initialRoute: "/",
-  //     onGenerateRoute: (settings) {
-  //       final args = settings.arguments as List<Product>;
-  //       return MaterialPageRoute(
-  //           builder: (context) => Checkout(
-  //                 cart: args,
-  //               ));
-  //     },
-  //     routes: {
-  //       "/": (context) => ShoppingList(products: products),
-  //     },
-  //   ),
-  // ));
+  runApp(const MainApp());
 }
 
-enum ProductCategory {
-  ALL,
-  HeadWear,
-  BodyWear,
-  Accessory,
+class MainApp extends StatefulWidget {
+  const MainApp({Key? key}) : super(key: key);
+  @override
+  _MainAppState createState() => _MainAppState();
+}
+
+Future<List<Product>> getProducts() async {
+  var data = jsonDecode(await rootBundle.loadString("assets/products.json"));
+  var products = data["products"];
+  return (products as List).map((e) => Product.fromJson(e)).toList();
+}
+
+class _MainAppState extends State<MainApp> {
+  late Future<List<Product>> products;
+
+  @override
+  void initState() {
+    super.initState();
+    products = getProducts();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: products,
+      builder: (context, snapshot) {
+        print("rebuild");
+        if (snapshot.hasData == false) {
+          return const CircularProgressIndicator();
+        }
+        return ChangeNotifierProvider(
+          create: (context) => CartModel(),
+          child: MaterialApp(
+            initialRoute: "/",
+            onGenerateRoute: (settings) {
+              final args = settings.arguments as List<Product>;
+              return MaterialPageRoute(
+                  builder: (context) => Checkout(
+                        cart: args,
+                      ));
+            },
+            routes: {
+              "/": (context) => ShoppingList(
+                    products: snapshot.data as List<Product>,
+                    refresh: () {
+                      setState(() {
+                        products = getProducts();
+                      });
+                    },
+                  ),
+            },
+          ),
+        );
+      },
+    );
+  }
+}
+
+enum ProductCategory { ALL, HeadWear, BodyWear, Accessory, Others }
+ProductCategory getCategory(String category) {
+  switch (category.toLowerCase()) {
+    case "headwear":
+      return ProductCategory.HeadWear;
+    case "bodywear":
+      return ProductCategory.BodyWear;
+    case "accessory":
+      return ProductCategory.Accessory;
+  }
+  return ProductCategory.Others;
 }
 
 class Product {
@@ -202,13 +210,29 @@ class Product {
   final int ratings;
   final String imagePath;
   final ProductCategory category;
+
+  // Product.fromJson(Map<String, dynamic> json)
+  //     : name = json['name'],
+  //       price = json['price'],
+  //       reviews = json['reviews'],
+  //       ratings = json['ratings'],
+  //       imagePath = json['image_path'],
+  //       category = json['category'];
+  factory Product.fromJson(Map<String, dynamic> json) => Product(
+      name: json["name"],
+      price: json["price"],
+      reviews: json['reviews'],
+      ratings: json['ratings'],
+      imagePath: json['image_path'],
+      category: getCategory(json["category"]));
 }
 
 class ShoppingList extends StatefulWidget {
-  const ShoppingList({Key? key, required this.products}) : super(key: key);
+  const ShoppingList({Key? key, required this.products, required this.refresh})
+      : super(key: key);
 
   final List<Product> products;
-
+  final Function refresh;
   @override
   _ShoppingListState createState() => _ShoppingListState();
 }
@@ -223,23 +247,13 @@ class _ShoppingListState extends State<ShoppingList>
         TabController(length: ProductCategory.values.length, vsync: this);
   }
 
-  List _items = [];
-
-  // Fetch content from the json file
-  Future<void> readJson() async {
-    final String response = await rootBundle.loadString('assets/products.json');
-    final data = await json.decode(response);
-    setState(() {
-      _items = data["names"];
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     var provider = Provider.of<CartModel>(context);
     return Scaffold(
       appBar: AppBar(
         bottom: TabBar(
+            isScrollable: true,
             controller: _tabController,
             tabs: ProductCategory.values
                 .map((e) => Tab(
@@ -254,7 +268,7 @@ class _ShoppingListState extends State<ShoppingList>
               IconButton(
                 icon: Icon(Icons.shopping_cart),
                 tooltip: 'Show Snackbar',
-                onPressed: () => readJson(),
+                onPressed: () => widget.refresh(),
               )
             ],
           )
@@ -345,26 +359,33 @@ class ProductItems extends StatelessWidget {
   final List<Product> cart;
   final ProductCategory category;
   final Function onSelect;
+
+  Future<void> _refresh() {
+    return Future.delayed(Duration(seconds: 3));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         Expanded(
-            child: ListView(
-          children: products
-              .where((element) =>
-                  element.category == category ||
-                  category == ProductCategory.ALL)
-              .map((Product product) {
-            return Padding(
-              padding: const EdgeInsets.all(10),
-              child: ProductItem(
-                product: product,
-                onSelect: () => onSelect(product),
-              ),
-            );
-          }).toList(),
-        )),
+            child: RefreshIndicator(
+                child: ListView(
+                  children: products
+                      .where((element) =>
+                          element.category == category ||
+                          category == ProductCategory.ALL)
+                      .map((Product product) {
+                    return Padding(
+                      padding: const EdgeInsets.all(10),
+                      child: ProductItem(
+                        product: product,
+                        onSelect: () => onSelect(product),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                onRefresh: _refresh)),
       ],
     );
   }
