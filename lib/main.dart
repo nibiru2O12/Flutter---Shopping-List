@@ -155,6 +155,34 @@ class _MainAppState extends State<MainApp> {
         if (snapshot.hasData == false) {
           return const CircularProgressIndicator();
         }
+
+        return MultiProvider(
+          providers: [
+            ChangeNotifierProvider<CartModel>(
+              create: (context) => CartModel(),
+            )
+          ],
+          child: MaterialApp(
+            initialRoute: "/",
+            onGenerateRoute: (settings) {
+              final args = settings.arguments as List<Product>;
+              return MaterialPageRoute(
+                  builder: (context) => Checkout(
+                        cart: args,
+                      ));
+            },
+            routes: {
+              "/": (context) => ShoppingList(
+                    products: snapshot.data as List<Product>,
+                    refresh: () {
+                      setState(() {
+                        products = getProducts();
+                      });
+                    },
+                  ),
+            },
+          ),
+        );
         return ChangeNotifierProvider(
           create: (context) => CartModel(),
           child: MaterialApp(
@@ -525,6 +553,8 @@ class Footer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var provider = Provider.of<CartModel>(context);
+
     return Container(
         padding: const EdgeInsets.all(10),
         child: Row(
@@ -534,10 +564,31 @@ class Footer extends StatelessWidget {
               children: [
                 const Icon(Icons.shopping_cart),
                 Text(cart.length.toString()),
+                SizedBox(
+                  width: 10,
+                ),
                 GestureDetector(
                   child: Text("Checkout"),
                   onTap: () => Navigator.pushNamed(context, '/checkouts',
                       arguments: cart),
+                ),
+                SizedBox(
+                  width: 10,
+                ),
+                GestureDetector(
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.delete,
+                        color: Colors.red,
+                      ),
+                      Text(
+                        "Clear",
+                        style: TextStyle(color: Colors.red),
+                      )
+                    ],
+                  ),
+                  onTap: () => provider.clear(),
                 )
               ],
             )),
