@@ -81,36 +81,45 @@ class _CartState extends State<Cart> {
         clear: clear,
         child: widget.child);
   }
+  // Widget build(BuildContext context) {
+  //   return CartInherited(
+  //       items: List.from(items),
+  //       toggle: toggle,
+  //       addItem: add,
+  //       removeItem: remove,
+  //       clear: clear,
+  //       child: widget.child);
+  // }
 }
 
-// class CartModel extends ChangeNotifier {
-//   final List<Product> _items = [];
+class CartModel extends ChangeNotifier {
+  final List<Product> _items = [];
 
-//   UnmodifiableListView<Product> get items => UnmodifiableListView(_items);
+  UnmodifiableListView<Product> get items => UnmodifiableListView(_items);
 
-//   void toggle(Product product) {
-//     if (_items.contains(product)) {
-//       remove(product);
-//     } else {
-//       add(product);
-//     }
-//   }
+  void toggle(Product product) {
+    if (_items.contains(product)) {
+      remove(product);
+    } else {
+      add(product);
+    }
+  }
 
-//   void add(Product product) {
-//     _items.add(product);
-//     notifyListeners();
-//   }
+  void add(Product product) {
+    _items.add(product);
+    notifyListeners();
+  }
 
-//   void remove(Product product) {
-//     _items.remove(product);
-//     notifyListeners();
-//   }
+  void remove(Product product) {
+    _items.remove(product);
+    notifyListeners();
+  }
 
-//   void clear() {
-//     _items.clear();
-//     notifyListeners();
-//   }
-// }
+  void clear() {
+    _items.clear();
+    notifyListeners();
+  }
+}
 
 void main() {
   List<Product> products = const [
@@ -137,20 +146,22 @@ void main() {
         imagePath: "assets/products/sidemirror.png")
   ];
 
-  runApp(Cart(
-      child: MaterialApp(
-    initialRoute: "/",
-    onGenerateRoute: (settings) {
-      final args = settings.arguments as List<Product>;
-      return MaterialPageRoute(
-          builder: (context) => Checkout(
-                cart: args,
-              ));
-    },
-    routes: {
-      "/": (context) => ShoppingList(products: products),
-    },
-  )));
+  runApp(ChangeNotifierProvider(
+    create: (context) => CartModel(),
+    child: MaterialApp(
+      initialRoute: "/",
+      onGenerateRoute: (settings) {
+        final args = settings.arguments as List<Product>;
+        return MaterialPageRoute(
+            builder: (context) => Checkout(
+                  cart: args,
+                ));
+      },
+      routes: {
+        "/": (context) => ShoppingList(products: products),
+      },
+    ),
+  ));
 
   // runApp(ChangeNotifierProvider(
   //   create: (context) => CartModel(),
@@ -225,7 +236,7 @@ class _ShoppingListState extends State<ShoppingList>
 
   @override
   Widget build(BuildContext context) {
-    var cart = context.dependOnInheritedWidgetOfExactType<CartInherited>();
+    var provider = Provider.of<CartModel>(context);
     return Scaffold(
       appBar: AppBar(
         bottom: TabBar(
@@ -239,7 +250,7 @@ class _ShoppingListState extends State<ShoppingList>
         actions: [
           Row(
             children: [
-              Text(cart!.items.length.toString()),
+              Text(provider._items.length.toString()),
               IconButton(
                 icon: Icon(Icons.shopping_cart),
                 tooltip: 'Show Snackbar',
@@ -257,12 +268,12 @@ class _ShoppingListState extends State<ShoppingList>
                   children: ProductCategory.values
                       .map((e) => ProductItems(
                           products: widget.products,
-                          cart: cart.items,
+                          cart: provider._items,
                           category: e,
-                          onSelect: cart.toggle))
+                          onSelect: provider.toggle))
                       .toList())),
           Footer(
-            cart: cart.items,
+            cart: provider._items,
           ),
         ],
       ),
@@ -367,7 +378,7 @@ class ProductItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var cart = context.dependOnInheritedWidgetOfExactType<CartInherited>();
+    var cart = Provider.of<CartModel>(context);
     return ListTile(
       subtitle: Column(children: [
         Row(children: [
@@ -401,7 +412,7 @@ class ProductItem extends StatelessWidget {
             children: [
               GestureDetector(
                 onTap: () => onSelect(),
-                child: ItemIcon(inCart: cart!.items.contains(product)),
+                child: ItemIcon(inCart: cart._items.contains(product)),
               ),
               const SizedBox(
                 width: 10,
