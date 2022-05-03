@@ -28,6 +28,8 @@ class CartInherited extends InheritedWidget {
 
   @override
   bool updateShouldNotify(CartInherited oldWidget) {
+    print("old " + oldWidget.items.length.toString());
+    print("new " + this.items.length.toString());
     return oldWidget.items != items;
   }
 }
@@ -72,7 +74,7 @@ class _CartState extends State<Cart> {
   @override
   Widget build(BuildContext context) {
     return CartInherited(
-        items: items,
+        items: List.from(items),
         toggle: toggle,
         addItem: add,
         removeItem: remove,
