@@ -52,21 +52,21 @@ class _CartState extends State<Cart> {
   }
 
   void add(Product product) {
-    // setState(() {
-    items.add(product);
-    // });
+    setState(() {
+      items.add(product);
+    });
   }
 
   void remove(Product product) {
-    // setState(() {
-    items.remove(product);
-    // });
+    setState(() {
+      items.remove(product);
+    });
   }
 
   void clear() {
-    // setState(() {
-    items.clear();
-    // });
+    setState(() {
+      items.clear();
+    });
   }
 
   @override
