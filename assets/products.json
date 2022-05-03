@@ -1,0 +1,15 @@
+{
+    "names": [{
+        "name":"Helmet",
+        "price": "255",
+        "category": "HeadWear"
+    },{
+        "name":"Jacket",
+        "price": "1255",
+        "category": "BodyWear"
+    },{
+        "name":"Side Mirror",
+        "price": "155",
+        "category": "Accessory"
+    }]
+}
