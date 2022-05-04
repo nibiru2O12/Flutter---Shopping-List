@@ -2,6 +2,7 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:ffi';
 
+import 'package:badges/badges.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -562,8 +563,11 @@ class Footer extends StatelessWidget {
             Expanded(
                 child: Row(
               children: [
-                const Icon(Icons.shopping_cart),
-                Text(cart.length.toString()),
+                Badge(
+                  toAnimate: false,
+                  badgeContent: Text(cart.length.toString()),
+                  child: Icon(Icons.shopping_cart),
+                ),
                 SizedBox(
                   width: 10,
                 ),
@@ -608,6 +612,7 @@ class ProductDetailsRoute extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var provider = Provider.of<CartModel>(context);
     return Scaffold(
       appBar: AppBar(
         title: Text("Product Details"),
