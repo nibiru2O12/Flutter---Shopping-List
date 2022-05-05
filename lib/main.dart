@@ -280,6 +280,32 @@ class _ShoppingListState extends State<ShoppingList>
   Widget build(BuildContext context) {
     var provider = Provider.of<CartModel>(context);
     return Scaffold(
+      bottomNavigationBar: BottomNavigationBar(
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
+        type: BottomNavigationBarType.fixed,
+        items: [
+          BottomNavigationBarItem(label: "Home", icon: Icon(Icons.home)),
+          BottomNavigationBarItem(
+              label: "Favorite", icon: Icon(Icons.favorite)),
+          BottomNavigationBarItem(
+              label: "Messages",
+              icon: Badge(
+                badgeContent: Text("22"),
+                child: Icon(Icons.message),
+              )),
+          BottomNavigationBarItem(
+              label: "Cart",
+              icon: Badge(
+                toAnimate: false,
+                showBadge: provider._items.length > 0,
+                badgeContent: Text(provider._items.length.toString()),
+                child: Icon(Icons.shopping_cart_checkout),
+              )),
+          BottomNavigationBarItem(
+              label: "Settings", icon: Icon(Icons.settings)),
+        ],
+      ),
       appBar: AppBar(
         bottom: TabBar(
             isScrollable: true,
@@ -552,6 +578,29 @@ class Footer extends StatelessWidget {
     return total.price;
   }
 
+  void showClearWarning(
+      {required BuildContext context, required Function onOk}) {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text("Alert"),
+            content: Text("Are your sure you want to clear your car?"),
+            actions: [
+              OutlinedButton(
+                  onPressed: () {
+                    onOk();
+                    Navigator.of(context).pop();
+                  },
+                  child: Text("Continue")),
+              ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text("Cancel"))
+            ],
+          );
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     var provider = Provider.of<CartModel>(context);
@@ -565,7 +614,7 @@ class Footer extends StatelessWidget {
               children: [
                 Badge(
                   toAnimate: false,
-                  badgeContent: Text(cart.length.toString()),
+                  badgeContent: Text(provider._items.length.toString()),
                   child: Icon(Icons.shopping_cart),
                 ),
                 SizedBox(
@@ -579,20 +628,24 @@ class Footer extends StatelessWidget {
                 SizedBox(
                   width: 10,
                 ),
-                GestureDetector(
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.delete,
-                        color: Colors.red,
-                      ),
-                      Text(
-                        "Clear",
-                        style: TextStyle(color: Colors.red),
-                      )
-                    ],
+                InkWell(
+                  onTap: () =>
+                      showClearWarning(context: context, onOk: provider.clear),
+                  child: GestureDetector(
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.delete,
+                          color: Colors.red,
+                        ),
+                        Text(
+                          "Clear",
+                          style: TextStyle(color: Colors.red),
+                        )
+                      ],
+                    ),
+                    onTap: null,
                   ),
-                  onTap: () => provider.clear(),
                 )
               ],
             )),
